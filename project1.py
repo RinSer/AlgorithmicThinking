@@ -60,6 +60,7 @@ def in_degree_distribution(digraph):
     return distribution
 
 
+"""
 TEST_GRAPH = make_complete_graph(5)
 print TEST_GRAPH
 print compute_in_degrees(TEST_GRAPH)
@@ -70,3 +71,4 @@ print compute_in_degrees(EX_GRAPH1)
 print in_degree_distribution(EX_GRAPH1)
 print compute_in_degrees(EX_GRAPH2)
 print in_degree_distribution(EX_GRAPH2)
+"""
