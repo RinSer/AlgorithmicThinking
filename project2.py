@@ -103,11 +103,11 @@ GRAPH3 = {0: set([]),
           3: set([4]),
           4: set([3])}
 
-print GRAPH0
-print bfs_visited(GRAPH0, 1)
-print cc_visited(GRAPH0)
-print compute_resilience(GRAPH0, [1, 2, 3])
-print largest_cc_size(GRAPH0)
+#print GRAPH0
+#print bfs_visited(GRAPH0, 1)
+#print cc_visited(GRAPH0)
+#print compute_resilience(GRAPH0, [1, 2, 3])
+#print largest_cc_size(GRAPH0)
 #print GRAPH1
 #print bfs_visited(GRAPH1, 1)
 #print cc_visited(GRAPH1)

@@ -16,12 +16,12 @@ def ER(vertices, probability):
     """
     graph = dict()
     for i in range(vertices):
-		graph[i] = set([])
-		for j in range(vertices):
-			if i != j:
-			    rand = random.random()
-			    if rand < probability:
-				graph[i].add(j)
+	graph[i] = set([])
+	for j in range(vertices):
+	    if i != j:
+	        rand = random.random()
+	        if rand < probability:
+		    graph[i].add(j)
 
     return graph
 
