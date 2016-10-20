@@ -14,7 +14,7 @@ import urllib2
 import poc_simpletest      # http://www.codeskulptor.org/#poc_simpletest.py
 import alg_cluster         # http://www.codeskulptor.org/#alg_cluster.py
 
-import alg_project3_solution as student
+import project3 as student
 
 
 ############################################################

@@ -23,18 +23,18 @@ def slow_closest_pair(cluster_list):
     distance = float('inf')
     idx1 = -1
     idx2 = -1
-    for idxI in range(len(cluster_list)):
-        for idxJ in range(len(cluster_list)):
-            if idxI != idxJ:
-                ij_distance = cluster_list[idxI].distance(cluster_list[idxJ])
+    for idx_i in range(len(cluster_list)):
+        for idx_j in range(len(cluster_list)):
+            if idx_i != idx_j:
+                ij_distance = cluster_list[idx_i].distance(cluster_list[idx_j])
                 if ij_distance < distance:
                     distance = ij_distance
-                    if idxI < idxJ:
-                        idx1 = idxI
-                        idx2 = idxJ
+                    if idx_i < idx_j:
+                        idx1 = idx_i
+                        idx2 = idx_j
                     else:
-                        idx1 = idxJ
-                        idx2 = idxI
+                        idx1 = idx_j
+                        idx2 = idx_i
     return (distance, idx1, idx2)
 
 
@@ -75,29 +75,59 @@ def closest_pair_strip(cluster_list, horiz_center, half_width):
     closest_points = list()
     for cluster in cluster_list:
         if abs(cluster.horiz_center()-horiz_center) < half_width:
-            closest_points.append(cluster)
-    closest_points.sort(key = lambda cluster: cluster.vert_center())
+            closest_points.append((cluster, cluster_list.index(cluster)))
+    closest_points.sort(key = lambda cluster: cluster[0].vert_center())
     length = len(closest_points)
     distance = float('inf')
     idx1 = -1
     idx2 = -1
-    for idxU in range(length-1):
-        for idxV in range(idxU+1, min(idxU+3, length)):
-            uv_distance = closest_points[idxU].distance(closest_points[idxV])
+    for idx_u in range(length-1):
+        for idx_v in range(idx_u+1, min(idx_u+4, length)):
+            uv_distance = closest_points[idx_u][0].distance(closest_points[idx_v][0])
             if uv_distance < distance:
                 distance = uv_distance
-                idx1 = idxU
-                idx2 = idxV
+                if closest_points[idx_u][1] < closest_points[idx_v][1]:
+                    idx1 = closest_points[idx_u][1]
+                    idx2 = closest_points[idx_v][1]
+                else:
+                    idx1 = closest_points[idx_v][1]
+                    idx2 = closest_points[idx_u][1]
     return (distance, idx1, idx2)
 
 
 # Initialize a list of clusters and populate it
-clusters = list()
+clusters111 = list()
 with open(DATA_111, 'r') as datafile:
     data_reader = csv.reader(datafile)
     for row in data_reader:
-        clusters.append(Cluster(row[0], float(row[1]), float(row[2]), int(row[3]), float(row[4])))
+        clusters111.append(Cluster(row[0], float(row[1]), float(row[2]), int(row[3]), float(row[4])))
 
-print slow_closest_pair(clusters)
-print fast_closest_pair(clusters)
+clusters290 = list()
+with open(DATA_290, 'r') as datafile:
+    data_reader = csv.reader(datafile)
+    for row in data_reader:
+        clusters290.append(Cluster(row[0], float(row[1]), float(row[2]), int(row[3]), float(row[4])))
+
+clusters896 = list()
+with open(DATA_896, 'r') as datafile:
+    data_reader = csv.reader(datafile)
+    for row in data_reader:
+        clusters896.append(Cluster(row[0], float(row[1]), float(row[2]), int(row[3]), float(row[4])))
+
+clusters3108 = list()
+with open(DATA_3108, 'r') as datafile:
+    data_reader = csv.reader(datafile)
+    for row in data_reader:
+        clusters3108.append(Cluster(row[0], float(row[1]), float(row[2]), int(row[3]), float(row[4])))
+
+
+print slow_closest_pair(clusters111)
+print fast_closest_pair(clusters111)
+print slow_closest_pair(clusters290)
+print fast_closest_pair(clusters290)
+print slow_closest_pair(clusters896)
+print fast_closest_pair(clusters896)
+print slow_closest_pair(clusters3108)
+print fast_closest_pair(clusters3108)
+
 
