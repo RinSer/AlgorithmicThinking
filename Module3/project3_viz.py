@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 """
 Example code for creating and visualizing
 cluster of county-based cancer risk data
@@ -13,11 +14,11 @@ DESKTOP = True
 import math
 import random
 import urllib2
-import alg_cluster
+import cluster as alg_cluster
 
 # conditional imports
 if DESKTOP:
-    import alg_project3_solution      # desktop project solution
+    import project3 as alg_project3_solution      # desktop project solution
     import alg_clusters_matplotlib
 else:
     #import userXX_XXXXXXXX as alg_project3_solution   # CodeSkulptor project solution

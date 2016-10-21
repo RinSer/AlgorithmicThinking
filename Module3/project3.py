@@ -7,13 +7,23 @@ created by RinSer
 
 from cluster import Cluster as Cluster
 import csv
+import math
 
-# File paths
-DATA_24 = '../unifiedCancerData_24.csv'
-DATA_111 = '../unifiedCancerData_111.csv'
-DATA_290 = '../unifiedCancerData_290.csv'
-DATA_896 = '../unifiedCancerData_896.csv'
-DATA_3108 = '../unifiedCancerData_3108.csv'
+
+
+def set_of_county_tuples(cluster_list):
+    """
+    Input: A list of Cluster objects
+    Output: Set of sorted tuple of counties corresponds to counties in each cluster
+    """
+    set_of_clusters = set([])
+    for cluster in cluster_list:
+        counties_in_cluster = cluster.fips_codes()
+        
+        # convert to immutable representation before adding to set
+        county_tuple = tuple(sorted(list(counties_in_cluster)))
+        set_of_clusters.add(county_tuple)
+    return set_of_clusters
 
 
 def slow_closest_pair(cluster_list):
@@ -122,101 +132,40 @@ def kmeans_clustering(cluster_list, num_clusters, num_iterations):
     Output: List of clusters whose length is num_clusters
     """
     length = len(cluster_list)
+    # Initialize k centers as clusters with the largest population
     largest_population = list(cluster_list)
     largest_population.sort(key = lambda cluster: cluster.total_population())
     k_centers = list()
     for idx_k in range(1, num_clusters+1):
-        k_centers.append(largest_population[len(largest_population)-idx_k])
+        x_coordinates = largest_population[len(largest_population)-idx_k].horiz_center()
+        y_coordinates = largest_population[len(largest_population)-idx_k].vert_center()
+        k_centers.append((x_coordinates, y_coordinates))
     assert len(k_centers) == num_clusters
-    for cluster in k_centers:
-        print cluster.total_population()
+    # Clustering
+    for indx_i in range(num_iterations):
+        # Initialize k empty clusters
+        clusters = list()
+        for idx_k in range(num_clusters):
+            clusters.append(Cluster(set(), k_centers[idx_k][0], k_centers[idx_k][1], 0, 0))
+        # Distribute the closest points
+        for idx_j in range(length):
+            min_distance = float('inf')
+            for idx_k in range(num_clusters):
+                # Compute the distance
+                vert_distance = cluster_list[idx_j].vert_center() - k_centers[idx_k][1]
+                horiz_distance = cluster_list[idx_j].horiz_center() - k_centers[idx_k][0]
+                distance = math.sqrt(vert_distance**2 + horiz_distance**2)
+                if distance < min_distance:
+                    merge_cluster = clusters[idx_k]
+                    min_distance = distance
+            merge_cluster.merge_clusters(cluster_list[idx_j])
+        # Adjust the cluster centers
+        if indx_i < num_iterations-1:
+            for idx_f in range(num_clusters):
+                x_coordinates = clusters[idx_f].horiz_center()
+                y_coordinates = clusters[idx_f].vert_center()
+                k_centers[idx_f] = (x_coordinates, y_coordinates)
+    return clusters
 
 
-# Initialize a list of clusters and populate it
-clusters24 = list()
-with open(DATA_24, 'r') as datafile:
-    data_reader = csv.reader(datafile)
-    for row in data_reader:
-        clusters24.append(Cluster(set([row[0]]), float(row[1]), float(row[2]), int(row[3]), float(row[4])))
-
-
-def set_of_county_tuples(cluster_list):
-    """
-    Input: A list of Cluster objects
-    Output: Set of sorted tuple of counties corresponds to counties in each cluster
-    """
-    set_of_clusters = set([])
-    for cluster in cluster_list:
-        counties_in_cluster = cluster.fips_codes()
-        
-        # convert to immutable representation before adding to set
-        county_tuple = tuple(sorted(list(counties_in_cluster)))
-        set_of_clusters.add(county_tuple)
-    return set_of_clusters
-
-# test data of the form [size of output cluster, sets of county tuples]
-hierdata_24 = [[23, set([('11001', '51013'), ('01073',), ('06059',), ('06037',), ('06029',), ('06071',), ('06075',), ('08031',), ('24510',), ('34013',), ('34039',), ('34017',), ('36061',), ('36005',), ('36047',), ('36059',), ('36081',), ('41051',), ('41067',), ('51840',), ('51760',), ('55079',), ('54009',)])],
-                   [22, set([('11001', '51013'), ('36047', '36081'), ('01073',), ('06059',), ('06037',), ('06029',), ('06071',), ('06075',), ('08031',), ('24510',), ('34013',), ('34039',), ('34017',), ('36061',), ('36005',), ('36059',), ('41051',), ('41067',), ('51840',), ('51760',), ('55079',), ('54009',)])],
-                   [21, set([('11001', '51013'), ('36005', '36061'), ('36047', '36081'), ('01073',), ('06059',), ('06037',), ('06029',), ('06071',), ('06075',), ('08031',), ('24510',), ('34013',), ('34039',), ('34017',), ('36059',), ('41051',), ('41067',), ('51840',), ('51760',), ('55079',), ('54009',)])],
-                   [20, set([('11001', '51013'), ('36005', '36061'), ('36047', '36081'), ('01073',), ('06059',), ('06037',), ('06029',), ('06071',), ('06075',), ('08031',), ('24510',), ('34039',), ('34013', '34017'), ('36059',), ('41051',), ('41067',), ('51840',), ('51760',), ('55079',), ('54009',)])],
-                   [19, set([('34013', '34017', '34039'), ('11001', '51013'), ('36005', '36061'), ('36047', '36081'), ('01073',), ('06059',), ('06037',), ('06029',), ('06071',), ('06075',), ('08031',), ('24510',), ('36059',), ('41051',), ('41067',), ('51840',), ('51760',), ('55079',), ('54009',)])],
-                   [18, set([('34013', '34017', '34039'), ('11001', '51013'), ('01073',), ('06059',), ('06037',), ('06029',), ('06071',), ('06075',), ('08031',), ('24510',), ('36059',), ('36005', '36047', '36061', '36081'), ('41051',), ('41067',), ('51840',), ('51760',), ('55079',), ('54009',)])],
-                   [17, set([('11001', '51013'), ('01073',), ('06059',), ('06037',), ('06029',), ('06071',), ('06075',), ('08031',), ('24510',), ('36059',), ('34013', '34017', '34039', '36005', '36047', '36061', '36081'), ('41051',), ('41067',), ('51840',), ('51760',), ('55079',), ('54009',)])],
-                   [16, set([('11001', '51013'), ('01073',), ('06059',), ('06037',), ('06029',), ('06071',), ('06075',), ('08031',), ('24510',), ('34013', '34017', '34039', '36005', '36047', '36059', '36061', '36081'), ('41051',), ('41067',), ('51840',), ('51760',), ('55079',), ('54009',)])],
-                   [15, set([('11001', '51013'), ('01073',), ('06059',), ('06037',), ('06029',), ('06071',), ('06075',), ('08031',), ('24510',), ('34013', '34017', '34039', '36005', '36047', '36059', '36061', '36081'), ('41051', '41067'), ('51840',), ('51760',), ('55079',), ('54009',)])],
-                   [14, set([('01073',), ('06059',), ('06037',), ('06029',), ('06071',), ('06075',), ('08031',), ('34013', '34017', '34039', '36005', '36047', '36059', '36061', '36081'), ('41051', '41067'), ('51840',), ('51760',), ('55079',), ('54009',), ('11001', '24510', '51013')])],
-                   [13, set([('06037', '06059'), ('01073',), ('06029',), ('06071',), ('06075',), ('08031',), ('34013', '34017', '34039', '36005', '36047', '36059', '36061', '36081'), ('41051', '41067'), ('51840',), ('51760',), ('55079',), ('54009',), ('11001', '24510', '51013')])],
-                   [12, set([('06037', '06059'), ('01073',), ('06029',), ('06071',), ('06075',), ('08031',), ('34013', '34017', '34039', '36005', '36047', '36059', '36061', '36081'), ('41051', '41067'), ('51760',), ('55079',), ('54009',), ('11001', '24510', '51013', '51840')])],
-                   [11, set([('06029', '06037', '06059'), ('01073',), ('06071',), ('06075',), ('08031',), ('34013', '34017', '34039', '36005', '36047', '36059', '36061', '36081'), ('41051', '41067'), ('51760',), ('55079',), ('54009',), ('11001', '24510', '51013', '51840')])],
-                   [10, set([('06029', '06037', '06059'), ('01073',), ('06071',), ('06075',), ('08031',), ('34013', '34017', '34039', '36005', '36047', '36059', '36061', '36081'), ('41051', '41067'), ('55079',), ('54009',), ('11001', '24510', '51013', '51760', '51840')])],
-                   [9, set([('01073',), ('06029', '06037', '06059', '06071'), ('06075',), ('08031',), ('34013', '34017', '34039', '36005', '36047', '36059', '36061', '36081'), ('41051', '41067'), ('55079',), ('54009',), ('11001', '24510', '51013', '51760', '51840')])],
-                   [8, set([('01073',), ('06029', '06037', '06059', '06071'), ('06075',), ('08031',), ('41051', '41067'), ('55079',), ('54009',), ('11001', '24510', '34013', '34017', '34039', '36005', '36047', '36059', '36061', '36081', '51013', '51760', '51840')])],
-                   [7, set([('01073',), ('06029', '06037', '06059', '06071'), ('06075',), ('08031',), ('41051', '41067'), ('55079',), ('11001', '24510', '34013', '34017', '34039', '36005', '36047', '36059', '36061', '36081', '51013', '51760', '51840', '54009')])],
-                   [6, set([('06029', '06037', '06059', '06071', '06075'), ('01073',), ('08031',), ('41051', '41067'), ('55079',), ('11001', '24510', '34013', '34017', '34039', '36005', '36047', '36059', '36061', '36081', '51013', '51760', '51840', '54009')])],
-                   [5, set([('06029', '06037', '06059', '06071', '06075'), ('08031',), ('41051', '41067'), ('01073', '55079'), ('11001', '24510', '34013', '34017', '34039', '36005', '36047', '36059', '36061', '36081', '51013', '51760', '51840', '54009')])],
-                   [4, set([('06029', '06037', '06059', '06071', '06075'), ('01073', '11001', '24510', '34013', '34017', '34039', '36005', '36047', '36059', '36061', '36081', '51013', '51760', '51840', '54009', '55079'), ('08031',), ('41051', '41067')])],
-                   [3, set([('06029', '06037', '06059', '06071', '06075', '41051', '41067'), ('01073', '11001', '24510', '34013', '34017', '34039', '36005', '36047', '36059', '36061', '36081', '51013', '51760', '51840', '54009', '55079'), ('08031',)])],
-                   [2, set([('01073', '11001', '24510', '34013', '34017', '34039', '36005', '36047', '36059', '36061', '36081', '51013', '51760', '51840', '54009', '55079'), ('06029', '06037', '06059', '06071', '06075', '08031', '41051', '41067')])],
-                   ]
-
-kmeans_clustering(clusters24, 3, 50)
-'''
-print set_of_county_tuples(clusters24)
-print set_of_county_tuples(hierarchical_clustering(clusters24, 23))
-print hierdata_24[0][1]
-
-clusters111 = list()
-with open(DATA_111, 'r') as datafile:
-    data_reader = csv.reader(datafile)
-    for row in data_reader:
-        clusters111.append(Cluster(row[0], float(row[1]), float(row[2]), int(row[3]), float(row[4])))
-
-clusters290 = list()
-with open(DATA_290, 'r') as datafile:
-    data_reader = csv.reader(datafile)
-    for row in data_reader:
-        clusters290.append(Cluster(row[0], float(row[1]), float(row[2]), int(row[3]), float(row[4])))
-
-clusters896 = list()
-with open(DATA_896, 'r') as datafile:
-    data_reader = csv.reader(datafile)
-    for row in data_reader:
-        clusters896.append(Cluster(row[0], float(row[1]), float(row[2]), int(row[3]), float(row[4])))
-
-clusters3108 = list()
-with open(DATA_3108, 'r') as datafile:
-    data_reader = csv.reader(datafile)
-    for row in data_reader:
-        clusters3108.append(Cluster(row[0], float(row[1]), float(row[2]), int(row[3]), float(row[4])))
-
-
-print slow_closest_pair(clusters111)
-print fast_closest_pair(clusters111)
-print slow_closest_pair(clusters290)
-print fast_closest_pair(clusters290)
-print slow_closest_pair(clusters896)
-print fast_closest_pair(clusters896)
-print slow_closest_pair(clusters3108)
-print fast_closest_pair(clusters3108)
-'''
 

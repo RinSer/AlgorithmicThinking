@@ -15,7 +15,6 @@ MAP_URL = DIRECTORY + "data_clustering/USA_Counties.png"
 COLORS = ['Aqua', 'Yellow', 'Blue', 'Fuchsia', 'Black', 'Green', 'Lime', 'Maroon', 'Navy', 'Olive', 'Orange', 'Purple', 'Red', 'Brown', 'Teal']
 
 
-
 # Helper functions
 
 def circle_area(pop):
