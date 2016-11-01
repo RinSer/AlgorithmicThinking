@@ -6,7 +6,6 @@ created by RinSer
 """
 
 from cluster import Cluster as Cluster
-import csv
 import math
 
 
