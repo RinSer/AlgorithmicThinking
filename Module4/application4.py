@@ -7,6 +7,9 @@ created by RinSer
 """
 
 
+import random
+from matplotlib import pyplot as plot
+import math
 import project4
 
 
@@ -76,21 +79,45 @@ def compare_strings(string1, string2):
     return number_of_equals/float(len(string1))*100
 
 
+def generate_null_distribution(seq_x, seq_y, scoring_matrix, num_trials):
+    """
+    Takes as input two sequences seq_x and seq_y, a scoring matrix scoring_matrix, and a number of trials num_trials. 
+    Returns a dictionary that represents an un-normalized distribution.
+    """
+    # Initialize the distribution dictionary
+    scoring_distribution = dict()
+    for dummy in range(num_trials):
+        # Generate a random permutation of the second sequence
+        list_y = list(seq_y)
+        random.shuffle(list_y)
+        rand_y = ''.join(list_y)
+        # Compute the maximum value score for the local alignment of seq_x and seq_y using the score matrix
+        current_alignment_matrix = project4.compute_alignment_matrix(seq_x, rand_y, scoring_matrix, False)
+        score = project4.compute_local_alignment(seq_x, rand_y, scoring_matrix, current_alignment_matrix)[0]
+        # Add the score to the distribution dictionary
+        if score in scoring_distribution:
+            scoring_distribution[score] += 1
+        else:
+            scoring_distribution[score] = 1
+
+    return scoring_distribution
+
+
 # Scoring matrix dictionary
 ScoringMatrix = read_scoring_matrix(SCORING_MATRIX)
+# Extract the proteins' data
+HumanEyeless = read_protein(HUMAN_EYELESS_PROTEIN)
+FruitflyEyeless = read_protein(FRUITFLY_EYELESS_PROTEIN)
 
 
 def Question1():
     """
     Function to compute the answer for Question #1.
     """
-    # Extract the data
-    human_eyeless = read_protein(HUMAN_EYELESS_PROTEIN)
-    fruitfly_eyeless = read_protein(FRUITFLY_EYELESS_PROTEIN)
     # Compute alignment scores
-    alignment_matrix = project4.compute_alignment_matrix(human_eyeless, fruitfly_eyeless, ScoringMatrix, False)
+    alignment_matrix = project4.compute_alignment_matrix(HumanEyeless, FruitflyEyeless, ScoringMatrix, False)
     # Compute the alignment
-    eyeless_alignment = project4.compute_local_alignment(human_eyeless, fruitfly_eyeless, ScoringMatrix, alignment_matrix)
+    eyeless_alignment = project4.compute_local_alignment(HumanEyeless, FruitflyEyeless, ScoringMatrix, alignment_matrix)
 
     print '### Question 1 ###'
     print 'Score: ' + str(eyeless_alignment[0])
@@ -125,5 +152,57 @@ def Question2():
     print 'Fruit fly percentage of agreed elements: ' + str(fruitfly_percentage) + '%'
 
 
+def Question4():
+    """
+    Function to draw the answer for Question #4.
+    """
+    scoring_distribution = generate_null_distribution(HumanEyeless, FruitflyEyeless, ScoringMatrix, 1000)
+    # Generate the distribution bar plot
+    scores = list()
+    fractions = list()
+    for score, fraction in scoring_distribution.iteritems():
+        scores.append(score)
+        fractions.append(fraction/1000.0)
+    plot.bar(scores, fractions, color='r')
+    plot.title('Null distribution of randomly generated scores.')
+    plot.xlabel('Score')
+    plot.ylabel('Fraction of trials total')
+    plot.savefig('q4.png')
+    plot.close()
+
+    print '### Question 4 ###'
+    print 'Null distribution bar plot has been saved as the file q4.png'
+
+    return scoring_distribution
+
+
+def Question5():
+    """
+    Function to compute the answer for Question #5.
+    """
+    scoring_distribution = Question4()
+    # Compute the mean
+    scores_sum = 0
+    for score in scoring_distribution.iterkeys():
+        scores_sum += score
+    mean = scores_sum/float(len(scoring_distribution))
+    # Compute the standard deviation
+    sum_of_squared_deviations = 0
+    for score in scoring_distribution.iterkeys():
+        sum_of_squared_deviations += (score - mean)**2
+    standard_deviation = math.sqrt(sum_of_squared_deviations/float(len(scoring_distribution)))
+    # Compute the z-value
+    z_value = (875 - mean)/standard_deviation
+    # Print the results
+    print '### Question 5 ###'
+    print 'Mean = ' + str(mean)
+    print 'Standard deviation = ' + str(standard_deviation)
+    print 'Z-value = ' + str(z_value)
+
+    return (mean, standard_deviation, z_value)
+
+
 # Execution
 Question2()
+
+Question5()
