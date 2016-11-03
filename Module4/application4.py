@@ -48,6 +48,7 @@ def read_scoring_matrix(file_name):
         scoring_matrix[row_value] = dict()
         for column_value, score in zip(column_values, scores):
             scoring_matrix[row_value][column_value] = int(score)
+    matrix_file.close()
 
     return scoring_matrix
 
@@ -101,6 +102,36 @@ def generate_null_distribution(seq_x, seq_y, scoring_matrix, num_trials):
             scoring_distribution[score] = 1
 
     return scoring_distribution
+
+
+def read_words_list(file_name):
+    """
+    Helper function to extract the word list from a file.
+    Returns the list.
+    """
+    words_file = open(file_name, 'r')
+    words_list = list()
+    for word in words_file.readlines():
+        words_list.append(word.rstrip())
+    words_file.close()
+
+    return words_list
+
+
+def check_spelling(checked_word, dist, word_list):
+    """
+    Iterates through word_list and returns the set of all words that are within edit distance dist of the string checked_word.
+    """
+    scoring_matrix = project4.build_scoring_matrix('abcdefghijklmnopqrstuvwxyz', 2, 1, 0)
+    within_dist = set()
+    for word in word_list:
+        alignment_matrix = project4.compute_alignment_matrix(checked_word, word, scoring_matrix, True)
+        score = project4.compute_local_alignment(checked_word, word, scoring_matrix, alignment_matrix)[0]
+        edit_distance = len(checked_word)+len(word)-score
+        if edit_distance <= dist:
+            within_dist.add(word)
+
+    return within_dist
 
 
 # Scoring matrix dictionary
@@ -183,14 +214,19 @@ def Question5():
     scoring_distribution = Question4()
     # Compute the mean
     scores_sum = 0
-    for score in scoring_distribution.iterkeys():
-        scores_sum += score
-    mean = scores_sum/float(len(scoring_distribution))
+    scores_number = 0
+    for score, value in scoring_distribution.iteritems():
+        for dummy in range(value):
+            scores_sum += score
+            scores_number += 1
+    mean = scores_sum/float(scores_number)
+    print scores_number
     # Compute the standard deviation
     sum_of_squared_deviations = 0
-    for score in scoring_distribution.iterkeys():
-        sum_of_squared_deviations += (score - mean)**2
-    standard_deviation = math.sqrt(sum_of_squared_deviations/float(len(scoring_distribution)))
+    for score, value in scoring_distribution.iteritems():
+        for dummy in range(value):
+            sum_of_squared_deviations += (score - mean)**2
+    standard_deviation = math.sqrt(sum_of_squared_deviations/float(scores_number))
     # Compute the z-value
     z_value = (875 - mean)/standard_deviation
     # Print the results
@@ -202,7 +238,17 @@ def Question5():
     return (mean, standard_deviation, z_value)
 
 
-# Execution
-Question2()
+def Question8():
+    """
+    Function to find the answer for Question #8.
+    """
+    words_list = read_words_list('assets_scrabble_words3.txt')
+    print '### Question 8 ###'
+    print check_spelling('humble', 1, words_list)
+    print check_spelling('firefly', 2, words_list)
 
-Question5()
+
+# Execution
+#Question2()
+#Question5()
+Question8()
